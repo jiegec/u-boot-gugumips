@@ -141,6 +141,17 @@ config TARGET_XILFPGA
 	help
 	  This supports IMGTEC MIPSfpga platform
 
+config MACH_GUGUMIPS
+	bool "Support GuGuMIPS"
+	select DM
+	select DM_SERIAL
+	select OF_CONTROL
+	select SUPPORTS_LITTLE_ENDIAN
+	select SUPPORTS_CPU_MIPS32_R1
+	select ROM_EXCEPTION_VECTORS
+	help
+	  This supports GuGuMIPS platform
+
 endchoice
 
 source "board/imgtec/boston/Kconfig"
@@ -154,6 +165,7 @@ source "arch/mips/mach-bmips/Kconfig"
 source "arch/mips/mach-jz47xx/Kconfig"
 source "arch/mips/mach-pic32/Kconfig"
 source "arch/mips/mach-mt7620/Kconfig"
+source "arch/mips/mach-gugumips/Kconfig"
 
 if MIPS
 

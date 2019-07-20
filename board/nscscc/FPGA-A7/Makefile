@@ -1,0 +1,1 @@
+obj-y := gugumips_nscscc.o

@@ -1,0 +1,15 @@
+if TARGET_GUGUMIPS_NSCSCC
+
+config SYS_BOARD
+    default "FPGA-A7"
+
+config SYS_VENDOR
+    default "nscscc"
+
+config SYS_CONFIG_NAME
+    default "gugumips_nscscc"
+
+config SYS_TEXT_BASE
+    default 0x80000000
+
+endif

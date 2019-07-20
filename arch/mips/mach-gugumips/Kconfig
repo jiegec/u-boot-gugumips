@@ -1,0 +1,14 @@
+menu "GuGuMIPS platforms"
+    depends on MACH_GUGUMIPS
+
+choice
+    prompt "Board select"
+
+config TARGET_GUGUMIPS_NSCSCC
+    bool "FPGA-A7 board used in NSCSCC"
+
+endchoice
+
+source "board/nscscc/Kconfig"
+
+endmenu

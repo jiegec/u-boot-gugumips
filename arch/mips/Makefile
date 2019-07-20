@@ -17,6 +17,7 @@ machine-$(CONFIG_ARCH_JZ47XX) += jz47xx
 machine-$(CONFIG_MACH_PIC32) += pic32
 machine-$(CONFIG_ARCH_MT7620) += mt7620
 machine-$(CONFIG_ARCH_MSCC) += mscc
+machine-$(CONFIG_ARCH_GUGUMIPS) += gugumips
 
 machdirs := $(patsubst %,arch/mips/mach-%/,$(machine-y))
 libs-y += $(machdirs)
