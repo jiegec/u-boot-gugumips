@@ -265,3 +265,9 @@ config USB_DWC2_BUFFER_SIZE
 	  because larger transactions could be split in smaller ones.
 
 endif # USB_DWC2
+
+config USB_UE11
+	bool "UltraEmbedded USB1.1 Core support"
+	select USB_HOST
+	---help---
+	  UltraEmbedded USB1.1 Core support

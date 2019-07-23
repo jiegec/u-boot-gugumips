@@ -60,3 +60,4 @@ obj-$(CONFIG_USB_XHCI_STI) += dwc3-sti-glue.o
 
 # designware
 obj-$(CONFIG_USB_DWC2) += dwc2.o
+obj-$(CONFIG_USB_UE11) += ue11-hcd.o

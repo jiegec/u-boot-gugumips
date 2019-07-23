@@ -1,5 +1,5 @@
-#ifndef __GUGUMIPS_THINPAD_CONFIG_H
-#define __GUGUMIPS_THINPAD_CONFIG_H
+#ifndef __GUGUMIPS_NSCSCC_CONFIG_H
+#define __GUGUMIPS_NSCSCC_CONFIG_H
 
 #define CONFIG_SKIP_LOWLEVEL_INIT
 #define CONFIG_SYS_MIPS_TIMER_FREQ 50000000
@@ -10,15 +10,16 @@
 #define CONFIG_SYS_MALLOC_LEN (256 << 10)
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_LOAD_ADDR 0x80000000 /* default load address */
-#define CONFIG_SYS_CBSIZE 1024 /* Console I/O Buffer Size   */
-#define CONFIG_SYS_MAXARGS 16  /* max number of command args*/
+#define CONFIG_SYS_CBSIZE 1024
+#define CONFIG_SYS_MAXARGS 16
 #define CONFIG_SYS_MAX_FLASH_BANKS 0
 
-#define CONFIG_ENV_IS_NOWHERE      1
+#define CONFIG_ENV_IS_NOWHERE 1
 #define CONFIG_ENV_SIZE 0x1000
 
 #define CONFIG_TIMESTAMP /* Print image info with timestamp */
 
-// #define DEBUG
+#define DEBUG
+#define UE11_DEBUG /* UltraEmbedded USB1.1 Debug */
 
-#endif /* __GUGUMIPS_THINPAD_CONFIG_H */
+#endif /* __GUGUMIPS_NSCSCC_CONFIG_H */
