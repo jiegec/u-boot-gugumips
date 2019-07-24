@@ -19,9 +19,9 @@
 
 #define CONFIG_TIMESTAMP /* Print image info with timestamp */
 
-#define DEBUG
+// #define DEBUG
 /* UltraEmbedded USB1.1 Core Debug */
-#define UE11_DEBUG
-#define UE11_INFO
+// #define UE11_ENABLE_DEBUG
+// #define UE11_ENABLE_INFO
 
 #endif /* __GUGUMIPS_NSCSCC_CONFIG_H */
