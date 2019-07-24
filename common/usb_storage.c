@@ -1017,11 +1017,11 @@ static int usb_test_unit_ready(struct scsi_cmd *srb, struct us_data *ss)
 	int retries = 10;
 
 	do {
-		memset(&srb->cmd[0], 0, 12);
+		memset(&srb->cmd[0], 0, 16);
 		srb->cmd[0] = SCSI_TST_U_RDY;
 		srb->cmd[1] = srb->lun << 5;
 		srb->datalen = 0;
-		srb->cmdlen = 12;
+		srb->cmdlen = 6;
 		if (ss->transport(srb, ss) == USB_STOR_TRANSPORT_GOOD) {
 			ss->flags |= USB_READY;
 			return 0;
