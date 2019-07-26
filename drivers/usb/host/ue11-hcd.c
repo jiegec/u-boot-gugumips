@@ -212,6 +212,8 @@ static uint32_t usbhw_reg_read(uint32_t addr) {
   return *((volatile uint32_t *)(_usb_base + addr));
 }
 
+void usbhw_timer_sleep(int ms) { udelay(ms * 1000); }
+
 void usbhw_hub_reset(void) {
   uint32_t val;
 
@@ -280,8 +282,6 @@ int usbhw_hub_device_detected(void) {
 }
 
 int usbhw_hub_full_speed_device(void) { return _usb_fs_device; }
-
-void usbhw_timer_sleep(int ms) { udelay(ms * 1000); }
 
 int usbhw_transfer_in(uint8_t pid, int device_addr, int endpoint,
                       uint8_t *response, uint8_t *rx, int rx_length) {
@@ -504,7 +504,6 @@ int submit_int_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
   int type = usb_pipetype(pipe);
   int in = usb_pipein(pipe);
   int out = usb_pipeout(pipe);
-  int pidData = usb_gettoggle(dev, endpoint, out) ? PID_DATA1 : PID_DATA0;
 
   dev->status = USB_ST_ACTIVE;
   dev->act_len = 0;
@@ -550,8 +549,6 @@ int submit_control_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
   int res = -1;
   uint8_t rxBuffer[USB_BUFFER_SIZE];
   uint8_t resp;
-  int received_len = 0;
-  int nak_retry = 0;
 
   int addr = usb_pipedevice(pipe);
   int endpoint = usb_pipe_ep_index(pipe);
@@ -570,8 +567,11 @@ int submit_control_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
       setup->requesttype, setup->request, setup->value, setup->index,
       setup->length);
 
-  if (setup) {
+  for (int retry = 0; retry < USB_CONTROL_RETRIES; retry++) {
+    int received_len = 0;
+    int nak_retry = 0;
     // setup
+    int setup_success = 0;
     while (nak_retry < USB_CONTROL_NAK_RETRIES) {
       res = usbhw_transfer_out(PID_SETUP, addr, endpoint, 1, PID_DATA0,
                                (uint8_t *)setup, sizeof(struct devrequest));
@@ -580,64 +580,76 @@ int submit_control_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
         nak_retry++;
         usbhw_timer_sleep(USB_CONTROL_NAK_RETRY_MS);
         continue;
-      }
-      if (res < 0) {
+      } else if (res == USB_RES_TIMEOUT) {
+        break;
+      } else if (res < 0) {
         goto end;
+      } else {
+        setup_success = 1;
+        break;
+      }
+    }
+
+    if (!setup_success)
+      continue;
+
+    int data_success = 1;
+    if (in) {
+      // control read
+      while (received_len < transfer_len &&
+             nak_retry < USB_CONTROL_NAK_RETRIES) {
+        res = usbhw_transfer_in(PID_IN, addr, endpoint, &resp, rxBuffer,
+                                sizeof(rxBuffer));
+        dev->status = res_to_usb_state(res);
+        if (res == USB_RES_NAK) {
+          nak_retry++;
+          usbhw_timer_sleep(USB_CONTROL_NAK_RETRY_MS);
+          continue;
+        } else if (res == USB_RES_TIMEOUT) {
+          data_success = 0;
+          break;
+        } else if (res < 0) {
+          goto end;
+        }
+        if (received_len < transfer_len) {
+          memcpy(buffer + received_len, rxBuffer,
+                 min(transfer_len - received_len, res));
+          received_len += res;
+          dev->act_len = received_len;
+          nak_retry = 0;
+        }
+      }
+
+      if (!data_success)
+        continue;
+
+      if (received_len == transfer_len) {
+        // zero length packet
+        // assume this never fails
+        usbhw_transfer_out(PID_OUT, addr, endpoint, 1, PID_DATA1, NULL, 0);
+        res = received_len;
       }
       break;
-    }
-  }
-
-  if (in) {
-    // control read
-    while (received_len < transfer_len && nak_retry < USB_CONTROL_NAK_RETRIES) {
-      res = usbhw_transfer_in(PID_IN, addr, endpoint, &resp, rxBuffer,
-                              sizeof(rxBuffer));
-      dev->status = res_to_usb_state(res);
-      if (res == USB_RES_NAK) {
-        nak_retry++;
-        usbhw_timer_sleep(USB_CONTROL_NAK_RETRY_MS);
-        continue;
-      }
-      if (res < 0) {
+    } else {
+      // control write
+      // read response
+      while (nak_retry < USB_CONTROL_NAK_RETRIES) {
+        res = usbhw_transfer_in(PID_IN, addr, endpoint, &resp, NULL, 0);
+        dev->status = res_to_usb_state(res);
+        if (res == USB_RES_NAK) {
+          nak_retry++;
+          usbhw_timer_sleep(USB_CONTROL_NAK_RETRY_MS);
+          continue;
+        } else if (res == USB_RES_TIMEOUT) {
+          break;
+        } else if (res < 0) {
+          goto end;
+        }
         goto end;
       }
-      if (received_len < transfer_len) {
-        memcpy(buffer + received_len, rxBuffer,
-               min(transfer_len - received_len, res));
-        received_len += res;
-        dev->act_len = received_len;
-        nak_retry = 0;
-      }
+      continue;
     }
-
-    if (received_len == transfer_len) {
-      // zero length packet
-      // assume this never fails
-      usbhw_transfer_out(PID_OUT, addr, endpoint, 1, PID_DATA1, NULL, 0);
-      res = received_len;
-    }
-  } else {
-    // control write
-    // read response
-    while (nak_retry < USB_CONTROL_NAK_RETRIES) {
-      res = usbhw_transfer_in(PID_IN, addr, endpoint, &resp, NULL, 0);
-      dev->status = res_to_usb_state(res);
-      if (res == USB_RES_NAK) {
-        nak_retry++;
-        usbhw_timer_sleep(USB_CONTROL_NAK_RETRY_MS);
-        continue;
-      }
-      if (res < 0) {
-        goto end;
-      }
-      break;
-    }
-    goto end;
   }
-
-  // nothing happens
-  dev->status = 0;
 
 end:
   UE11_INFO("%s res %d\n", __func__, res);
@@ -657,7 +669,6 @@ int submit_bulk_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
   int type = usb_pipetype(pipe);
   int in = usb_pipein(pipe);
   int out = usb_pipeout(pipe);
-  int data = usb_pipedata(pipe);
   int pidData = usb_gettoggle(dev, endpoint, out) ? PID_DATA1 : PID_DATA0;
 
   dev->status = USB_ST_ACTIVE;
@@ -691,7 +702,7 @@ int submit_bulk_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
     // out
     while (nak_retry < USB_CONTROL_NAK_RETRIES) {
       res = usbhw_transfer_out(PID_OUT, addr, endpoint, 1, pidData, buffer,
-                              transfer_len);
+                               transfer_len);
       dev->status = res_to_usb_state(res);
       if (res == USB_RES_NAK) {
         nak_retry++;
@@ -719,7 +730,7 @@ end:
 int usb_lowlevel_stop(int index) {
   UE11_INFO("%s\n", __func__);
   // Reset
-  val = 0;
+  int val = 0;
   usbhw_reg_write(USB_CTRL, val);
   usbhw_timer_sleep(5);
 

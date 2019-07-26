@@ -19,7 +19,8 @@
 
 	aliases {
 		console = &uart_dev;
-		spi0 = &axi_qspi;
+		spi0 = &spi_flash;
+		eth = &axi_ethernetlite;
 	};
 
 	uart_dev: serial@bfd00000 {
@@ -28,11 +29,11 @@
 		interrupts = <4 0>;
 	};
 
-	axi_qspi: spi@bfa00000 {
+	spi_flash: spi@bf900000 {
         #address-cells = <1>;
         #size-cells = <0>;
 		compatible = "xlnx,xps-spi-2.00.a";
-		reg = <0xbfa00000 0x1000>;
+		reg = <0xbf900000 0x1000>;
 		fifo-size = <256>;
 		xlnx,spi-mode = <0>;
 

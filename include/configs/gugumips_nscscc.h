@@ -14,7 +14,8 @@
 #define CONFIG_SYS_MAXARGS 16
 #define CONFIG_SYS_MAX_FLASH_BANKS 0
 
-#define CONFIG_ENV_IS_NOWHERE 1
+#define CONFIG_ENV_SECT_SIZE 0x10000
+#define CONFIG_ENV_OFFSET 0
 #define CONFIG_ENV_SIZE 0x1000
 
 #define CONFIG_TIMESTAMP /* Print image info with timestamp */
