@@ -1909,4 +1909,10 @@ config CMD_UBIFS
 	help
 	  UBIFS is a file system for flash devices which works on top of UBI.
 
+config CMD_LCD
+	bool "lcd - control nt35510 lcd screen output"
+	default n
+	help
+	  Controls nt35510 lcd screen output
+
 endmenu
