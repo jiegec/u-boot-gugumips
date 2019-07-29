@@ -12,7 +12,7 @@ u32 yres = 800;
 u32 regs = 0xBF600000;
 
 static void nt35510_out32(u32 offset, u32 val) {
-  writel(val, regs + (offset << 2));
+  writel(val, (u32 *)(regs + (offset << 2)));
   debug("nt35510_out32: off=0x%02x val=0x%04x\n", offset, val);
 }
 
@@ -460,7 +460,7 @@ int do_lcd(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[]) {
   nt35510_seek_point(0, 0);
   nt35510_out32(NT35510_INST_OFFSET, 0x2C00);
   for (u32 i = 0; i < xres * yres; i++) {
-    nt35510_out32(NT35510_DATA_OFFSET, (u16)i);
+    nt35510_out32(NT35510_DATA_OFFSET, (u16)rand());
   }
   printf("%s done\n", __func__);
   return 0;
